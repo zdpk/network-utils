@@ -256,19 +256,19 @@ int main(int argc, char **argv) {
     exit(1);
   }
 
-  /* 4. send ARP request */
+  /* 6. send ARP request */
   if (send_arp_request(socket_fd, &interface, &target_ip) < 0) {
     perror("failed to send ARP request");
     exit(1);
   }
 
-  // /* 4. bind raw socket to interface */
+  // /* bind raw socket to interface */
   // if (bind_raw_socket(socket_fd, &source_addr, source_addr_len) < 0) {
   //   perror("failed to bind raw socket to interface");
   //   exit(1);
   // }
 
-  // /* 5. receive ARP reply */
+  // /* 7. receive ARP reply */
   if (recv_arp_reply(socket_fd, &interface, &target_ip) < 0) {
     perror("failed to receive ARP reply");
     exit(1);
