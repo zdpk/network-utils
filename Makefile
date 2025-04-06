@@ -1,7 +1,11 @@
+# C Compiler
 CC = gcc
+# -Wall: Warnings on all errors
+# -Wextra: Warnings on extra errors
+# -I./include: Include the `include` directory in the search path for header files(.h)
 CFLAGS = -Wall -Wextra -I./include
 
-# executable files
+# paths for target files
 TARGETS = bin/arping bin/icmping
 
 all: $(TARGETS)
