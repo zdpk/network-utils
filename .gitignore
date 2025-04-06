@@ -2,6 +2,9 @@
 bin/
 obj/
 
+# exclude executable files path
+!src/bin/
+
 # Common C related files
 *.o
 *.ko
