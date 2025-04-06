@@ -1,4 +1,3 @@
-#include "../../include/arp_packet.h"
 #include <arpa/inet.h>
 #include <asm-generic/socket.h>
 #include <errno.h>
@@ -14,69 +13,21 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-struct interface_t {
-  int index;
-  uint8_t mac_addr[ETH_ALEN];
-  struct sockaddr_in ip_addr;
-};
+#include "../../include/arp_packet.h"
+#include "../../include/if_arp.h"
+#include "../../include/if_ether.h"
+#include "../../include/interface.h"
 
-void print_interface_info(const struct interface_t *interface) {
-  printf("========== Interface Info ==========\n");
-  printf("Index      : %d\n", interface->index);
-  printf("MAC Address: %02X:%02X:%02X:%02X:%02X:%02X\n", interface->mac_addr[0],
-         interface->mac_addr[1], interface->mac_addr[2], interface->mac_addr[3],
-         interface->mac_addr[4], interface->mac_addr[5]);
-  printf("IP Address : %s\n", inet_ntoa(interface->ip_addr.sin_addr));
-  printf("====================================\n");
-}
-
-void print_usage(const char *program_name) {
+void print_usage(const char* program_name) {
   printf("Usage: %s <target_ip>\n", program_name);
 }
 
-int parse_args(int argc, char **argv, char *target_ip) {
+int parse_args(int argc, char** argv, char* target_ip) {
   if (argc != 2) {
     print_usage(argv[0]);
     exit(1);
   }
   strncpy(target_ip, argv[1], INET_ADDRSTRLEN - 1);
-  return 0;
-}
-
-int init_interface(struct interface_t *interface, const char *interface_name) {
-  struct ifreq ifr = {
-      0,
-  };
-
-  int sock_fd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
-  if (sock_fd < 0) {
-    perror("failed to create a raw socket");
-    return -1;
-  }
-  strncpy(ifr.ifr_name, interface_name, IFNAMSIZ - 1);
-
-  /*
-    once `ioctl` is called, ifr's previous values are overwritten
-    need to save the previous values before calling `ioctl`
-   */
-  if (ioctl(sock_fd, SIOCGIFINDEX, &ifr) < 0) {
-    perror("failed to get interface index");
-    return -1;
-  }
-  interface->index = ifr.ifr_ifindex;
-  if (ioctl(sock_fd, SIOCGIFHWADDR, &ifr) < 0) {
-    perror("failed to get hardware address");
-    return -1;
-  }
-  memcpy(interface->mac_addr, ifr.ifr_hwaddr.sa_data, ETH_ALEN);
-
-  if (ioctl(sock_fd, SIOCGIFADDR, &ifr) < 0) {
-    perror("failed to get IP address");
-    return -1;
-  }
-  memcpy(&interface->ip_addr, (struct sockaddr_in *)&ifr.ifr_addr,
-         sizeof(struct sockaddr_in));
-  print_interface_info(interface);
   return 0;
 }
 
@@ -90,8 +41,8 @@ int create_raw_socket() {
   return socket_fd;
 }
 
-int init_sockaddr_ll(struct sockaddr_ll *sockaddr_ll,
-                     const struct interface_t *interface) {
+int init_sockaddr_ll(struct sockaddr_ll* sockaddr_ll,
+                     const struct interface_t* interface) {
   sockaddr_ll->sll_family = AF_PACKET;
   sockaddr_ll->sll_ifindex = interface->index;
   sockaddr_ll->sll_protocol = ETH_P_ARP;
@@ -103,17 +54,17 @@ int init_sockaddr_ll(struct sockaddr_ll *sockaddr_ll,
   return 0;
 }
 
-int bind_raw_socket(int socket_fd, struct sockaddr_in *source_addr,
+int bind_raw_socket(int socket_fd, struct sockaddr_in* source_addr,
                     socklen_t source_addr_len) {
-  if (bind(socket_fd, (struct sockaddr *)source_addr, source_addr_len) < 0) {
+  if (bind(socket_fd, (struct sockaddr*)source_addr, source_addr_len) < 0) {
     perror("failed to bind raw socket to interface");
     return -1;
   }
   return 0;
 }
 
-int send_arp_request(int socket_fd, struct interface_t *interface,
-                     const struct in_addr *target_ip
+int send_arp_request(int socket_fd, struct interface_t* interface,
+                     const struct in_addr* target_ip
                      //  struct sockaddr_ll *sockaddr_ll,
                      //  socklen_t sockaddr_ll_len
 ) {
@@ -149,14 +100,14 @@ int send_arp_request(int socket_fd, struct interface_t *interface,
 
   /* send ARP request */
   if (sendto(socket_fd, &packet, sizeof(packet), 0,
-             (struct sockaddr *)&sockaddr_ll, sizeof(sockaddr_ll)) < 0) {
+             (struct sockaddr*)&sockaddr_ll, sizeof(sockaddr_ll)) < 0) {
     return -1;
   }
   return 0;
 }
 
-int recv_arp_reply(int socket_fd, struct interface_t *interface,
-                   const struct in_addr *source_ip) {
+int recv_arp_reply(int socket_fd, struct interface_t* interface,
+                   const struct in_addr* source_ip) {
   struct arp_packet packet = {
       0,
   };
@@ -172,7 +123,7 @@ int recv_arp_reply(int socket_fd, struct interface_t *interface,
   while (1) {
     ssize_t recv_len =
         recvfrom(socket_fd, &packet, sizeof(struct arp_packet), 0,
-                 (struct sockaddr *)&sockaddr_ll, &sockaddr_ll_len);
+                 (struct sockaddr*)&sockaddr_ll, &sockaddr_ll_len);
     printf("recv_len: %zd\n", recv_len);
     print_arp_packet(&packet);
     if (recv_len < sizeof(struct arp_packet)) {
@@ -211,7 +162,7 @@ int recv_arp_reply(int socket_fd, struct interface_t *interface,
   }
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   struct interface_t interface;
   const char interface_name[IFNAMSIZ] = "eth0";
   const char target_ip_str[INET_ADDRSTRLEN] = {
@@ -226,7 +177,7 @@ int main(int argc, char **argv) {
   };
 
   /* 1. parse arguments */
-  if (parse_args(argc, argv, (char *)target_ip_str) < 0) {
+  if (parse_args(argc, argv, (char*)target_ip_str) < 0) {
     perror("failed to parse arguments");
     exit(1);
   }
@@ -262,13 +213,13 @@ int main(int argc, char **argv) {
     exit(1);
   }
 
-  // /* bind raw socket to interface */
+  /* bind raw socket to interface */
   // if (bind_raw_socket(socket_fd, &source_addr, source_addr_len) < 0) {
   //   perror("failed to bind raw socket to interface");
   //   exit(1);
   // }
 
-  // /* 7. receive ARP reply */
+  /* 7. receive ARP reply */
   if (recv_arp_reply(socket_fd, &interface, &target_ip) < 0) {
     perror("failed to receive ARP reply");
     exit(1);
