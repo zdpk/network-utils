@@ -1,7 +1,7 @@
 #include <netinet/in.h>
 
-#include "../../include/arp_packet.h"
-#include "../../include/if_ether.h"
+#include "../../include/l2/arp_packet.h"
+#include "../../include/l2/if_ether.h"
 
 void print_arphdr(const struct arphdr* arp) {
   printf("=== ARP HEADER ===\n");

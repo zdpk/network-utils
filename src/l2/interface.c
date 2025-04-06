@@ -1,4 +1,4 @@
-#include "../../include/interface.h"
+#include "../../include/l2/interface.h"
 
 #include <arpa/inet.h>
 #include <net/if.h>

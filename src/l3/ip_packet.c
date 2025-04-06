@@ -1,12 +1,12 @@
-#include "../../include/ip_packet.h"
+#include "../../include/l3/ip_packet.h"
 
 #include <arpa/inet.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <time.h>
 
-#include "../../include/icmp.h"
-#include "../../include/if_ether.h"
+#include "../../include/l2/if_ether.h"
+#include "../../include/l3/icmp.h"
 
 void print_ip_packet(struct ip_packet* packet) {
   // print_ethhdr(&packet->eth);

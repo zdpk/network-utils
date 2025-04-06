@@ -1,6 +1,6 @@
-#include "../../include/arp_packet.h"
+#include "../../include/l2/arp_packet.h"
 
-#include "../../include/if_ether.h"
+#include "../../include/l2/if_ether.h"
 
 void print_arp_packet(const struct arp_packet* packet) {
   const struct ethhdr* eth = &packet->eth;
