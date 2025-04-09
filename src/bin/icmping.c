@@ -1,6 +1,5 @@
 #include <arpa/inet.h>
 #include <bits/pthreadtypes.h>
-#include <netinet/in.h>
 #include <pthread.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -65,7 +64,8 @@ int init_sockaddr_in(struct sockaddr_in* addr, const char* ip_addr_str) {
   addr->sin_family = AF_INET;
   /* 0 is wildcard port */
   addr->sin_port = 0;
-  addr->sin_addr.s_addr = inet_addr(ip_addr_str);
+  inet_pton(AF_INET, ip_addr_str, &addr->sin_addr);
+  // addr->sin_addr.s_addr = inet_addr(ip_addr_str);
   return 0;
 }
 
@@ -76,11 +76,6 @@ int send_icmp_echo_request(int socket_fd, struct sockaddr_in* src_addr,
   uint8_t ip_packet_buf[sizeof(struct ip_packet) + ICMP_DATA_SIZE];
   memset(ip_packet_buf, 0, sizeof(struct ip_packet) + ICMP_DATA_SIZE);
   struct ip_packet* packet = (struct ip_packet*)ip_packet_buf;
-
-  if (!packet) {
-    perror("Failed to allocate packet memory");
-    return -1;
-  }
 
   /* initialize ip header */
   packet->ip.version = IPVERSION; /* version of IP */
@@ -124,7 +119,7 @@ int send_icmp_echo_request(int socket_fd, struct sockaddr_in* src_addr,
   packet->icmp.checksum = calc_checksum(
       (uint16_t*)&packet->icmp, sizeof(struct icmphdr) + ICMP_DATA_SIZE);
 
-  // print_ip_packet(packet);
+  print_ip_packet(packet);
   // printf("----------------------------------\n\n");
 
   /*
@@ -203,6 +198,8 @@ int recv_icmp_echo_reply(int socket_fd, struct sockaddr_in* src_addr,
     fprintf(stderr, "invalid ICMP checksum\n");
     return -1;
   }
+
+  packet->icmp.checksum = received_checksum;
 
   printf("Received ICMP Echo Reply from %s\n", inet_ntoa(src_addr->sin_addr));
   print_ip_packet(packet);

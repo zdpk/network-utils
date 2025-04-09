@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../l2/if_ether.h"
 #include "icmp.h"
 #include "ip.h"
 

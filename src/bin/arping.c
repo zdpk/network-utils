@@ -68,6 +68,9 @@ int send_arp_request(int socket_fd, struct interface_t* interface,
                      //  struct sockaddr_ll *sockaddr_ll,
                      //  socklen_t sockaddr_ll_len
 ) {
+  struct sockaddr_ll sockaddr_ll = {
+      0,
+  };
   struct arp_packet packet = {
       0,
   };
@@ -83,18 +86,10 @@ int send_arp_request(int socket_fd, struct interface_t* interface,
   packet.arp.ar_hln = ETH_ALEN;
   packet.arp.ar_pln = 4;
   packet.arp.ar_op = htons(ARPOP_REQUEST);
-  memcpy(packet.arp.ar_sha, interface->mac_addr, ETH_ALEN);
-  memcpy(packet.arp.ar_sip, &interface->ip_addr.sin_addr.s_addr, 4);
-  memset(packet.arp.ar_tha, 0x00, ETH_ALEN);
-  memcpy(packet.arp.ar_tip, &target_ip->s_addr, 4);
 
-  /* set sockaddr_ll */
-  struct sockaddr_ll sockaddr_ll = {
-      0,
-  };
-  sockaddr_ll.sll_family = AF_PACKET;
   sockaddr_ll.sll_ifindex = interface->index;
   sockaddr_ll.sll_protocol = htons(ETH_P_ARP);
+  sockaddr_ll.sll_family = AF_PACKET;
 
   print_arp_packet(&packet);
 

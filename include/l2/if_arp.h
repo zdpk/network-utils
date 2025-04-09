@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <linux/socket.h>
 #include "if_ether.h"
 
 typedef unsigned short __be16;
