@@ -13,29 +13,7 @@
 
 #include "../../include/l2/interface.h"
 #include "../../include/l3/ip_packet.h"
-
-uint16_t calc_checksum(uint16_t* buf, int len) {
-  uint32_t sum = 0;
-  while (len > 1) {
-    /* Accumulate the sum by adding 16-bit units until 0-1 bytes remain */
-    sum += *buf++;
-    len -= 2;
-  }
-
-  /* if buf is odd, add the last byte to the sum */
-  if (len == 1) {
-    sum += *(uint8_t*)buf;
-  }
-
-  /* move upper 16 bits to lower 16 bits and add them */
-  sum = (sum >> 16) + (sum & 0x0000FFFF);
-  /* if the addition of upper 16 bits causes a carry, add it to the lower 16
-   * bits */
-  sum += (sum >> 16);
-
-  /* return the lower 16 bits of the final value as a one's complement */
-  return (uint16_t)(~sum);
-}
+#include "../../include/utils/checksum.h"
 
 void print_usage(const char* program_name) {
   printf("Usage: %s <target_ip>\n", program_name);
@@ -82,9 +60,9 @@ int send_icmp_echo_request(int socket_fd, struct sockaddr_in* src_addr,
   packet->ip.ihl = 5;             /* default header length (20bytes) */
   packet->ip.tos = 0;             /* type of service */
   packet->ip.tot_len = htons(sizeof(struct ip_packet) +
-                             ICMP_DATA_SIZE);   /* total length of IP packet */
-  packet->ip.id = htons(getpid() & 0x0000FFFF); /* identifier of ICMP */
-  packet->ip.frag_off = 0;                      /* fragment offset */
+                             ICMP_DATA_SIZE); /* total length of IP packet */
+  packet->ip.id = htons(getpid());            /* identifier of ICMP */
+  packet->ip.frag_off = 0;                    /* fragment offset */
   /* usually set to 64 or 128 */
   packet->ip.ttl = 64;                           /* time to live */
   packet->ip.protocol = IPPROTO_ICMP;            /* protocol of IP */
@@ -93,11 +71,11 @@ int send_icmp_echo_request(int socket_fd, struct sockaddr_in* src_addr,
   packet->ip.daddr = dest_addr->sin_addr.s_addr; /* destination address */
 
   /* initialize icmp header */
-  packet->icmp.type = ICMP_ECHO;                  /* type of ICMP */
-  packet->icmp.code = 0;                          /* code of ICMP */
-  packet->icmp.checksum = 0;                      /* checksum of ICMP */
-  packet->icmp.id = htons(getpid() & 0x0000FFFF); /* identifier of ICMP */
-  packet->icmp.sequence = htons(sequence);        /* sequence number of ICMP */
+  packet->icmp.type = ICMP_ECHO;           /* type of ICMP */
+  packet->icmp.code = 0;                   /* code of ICMP */
+  packet->icmp.checksum = 0;               /* checksum of ICMP */
+  packet->icmp.id = htons(getpid());       /* identifier of ICMP */
+  packet->icmp.sequence = htons(sequence); /* sequence number of ICMP */
 
   /* icmp data (56bytes) */
   uint32_t* timestamp = (uint32_t*)(packet->data);
@@ -130,6 +108,13 @@ int send_icmp_echo_request(int socket_fd, struct sockaddr_in* src_addr,
     and the socket is raw socket
   */
   int one = 1;
+  /*
+    IP_HDRINCL - ip header include (manually)
+    if `SOCK_DGRAM` is used, Kernel will automatically add IP header
+    but if `SOCK_RAW` is used, we need to manually add IP header
+    in this case, `IP_HDRINCL` option is required for adding IP header that I
+    wrote manually
+   */
   if (setsockopt(socket_fd, IPPROTO_IP, IP_HDRINCL, &one, sizeof(one)) < 0) {
     perror("Error setting IP_HDRINCL");
     return -1;
@@ -183,23 +168,31 @@ int recv_icmp_echo_reply(int socket_fd, struct sockaddr_in* src_addr,
   }
 
   // validate ICMP id
-  if (ntohs(packet->icmp.id) != (getpid() & 0x0000FFFF)) {
+  if (ntohs(packet->icmp.id) != (getpid())) {
     fprintf(stderr, "invalid ICMP ID\n");
     return -1;
   }
 
-  // validate checksum
-  uint16_t received_checksum = packet->icmp.checksum;
+  // validate ip, icmp checksum
+  uint16_t ip_checksum = packet->ip.check;
+  uint16_t icmp_checksum = packet->icmp.checksum;
+  packet->ip.check = 0;
   packet->icmp.checksum = 0;
-  uint16_t calculated_checksum = calc_checksum(
-      (uint16_t*)&packet->icmp, sizeof(struct icmphdr) + ICMP_DATA_SIZE);
 
-  if (received_checksum != calculated_checksum) {
-    fprintf(stderr, "invalid ICMP checksum\n");
+  /* check ip checksum */
+  if (!verify_checksum((uint16_t*)&packet->ip, sizeof(struct iphdr),
+                       ip_checksum)) {
+    fprintf(stderr, "invalid IP checksum\n");
     return -1;
   }
 
-  packet->icmp.checksum = received_checksum;
+  /* check icmp checksum */
+  if (!verify_checksum((uint16_t*)&packet->icmp,
+                       sizeof(struct icmphdr) + ICMP_DATA_SIZE,
+                       icmp_checksum)) {
+    fprintf(stderr, "invalid ICMP checksum\n");
+    return -1;
+  }
 
   printf("Received ICMP Echo Reply from %s\n", inet_ntoa(src_addr->sin_addr));
   print_ip_packet(packet);
