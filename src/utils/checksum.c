@@ -1,7 +1,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-uint16_t calc_checksum(uint16_t* buf, int len) {
+extern uint16_t calc_checksum(uint16_t* buf, int len) {
   uint32_t sum = 0;
   while (len > 1) {
     /* Accumulate the sum by adding 16-bit units until 0-1 bytes remain */
@@ -24,6 +24,6 @@ uint16_t calc_checksum(uint16_t* buf, int len) {
   return (uint16_t)(~sum);
 }
 
-bool verify_checksum(uint16_t* buf, int len, uint16_t checksum) {
+extern bool verify_checksum(uint16_t* buf, int len, uint16_t checksum) {
   return calc_checksum(buf, len) == checksum;
 }

@@ -3,7 +3,7 @@
 #include <arpa/inet.h>
 #include <stdio.h>
 
-void print_icmphdr(struct icmphdr* icmp_header) {
+extern void print_icmphdr(struct icmphdr* icmp_header) {
   printf("ICMP Header:\n");
   printf("  Type: %d", icmp_header->type);
   if (icmp_header->type == ICMP_ECHO) {

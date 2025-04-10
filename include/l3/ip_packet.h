@@ -13,5 +13,5 @@ struct ip_packet {
     uint8_t data[];
 } __attribute__((packed));
 
-void print_ip_packet(struct ip_packet* packet);
+extern void print_ip_packet(struct ip_packet* packet);
 

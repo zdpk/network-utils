@@ -23,4 +23,4 @@ struct arphdr {
     uint8_t ar_tip[4];        /* target IP address */
 } __attribute__((packed));
 
-void print_arphdr(const struct arphdr* arp);
+extern void print_arphdr(const struct arphdr* arp);

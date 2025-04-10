@@ -8,4 +8,4 @@ struct arp_packet {
     struct arphdr arp;     
 } __attribute__((packed)); 
 
-void print_arp_packet(const struct arp_packet* packet);
+extern void print_arp_packet(const struct arp_packet* packet);

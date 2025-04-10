@@ -18,4 +18,4 @@ struct iphdr {
   uint32_t daddr; /* destination address */
 } __attribute__((packed));
 
-void print_iphdr(struct iphdr* ip_header);
+extern void print_iphdr(struct iphdr* ip_header);

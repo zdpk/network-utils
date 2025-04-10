@@ -7,7 +7,8 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 
-int init_interface(struct interface_t* interface, const char* interface_name) {
+extern int init_interface(struct interface_t* interface,
+                          const char* interface_name) {
   struct ifreq ifr = {
       0,
   };
@@ -44,7 +45,7 @@ int init_interface(struct interface_t* interface, const char* interface_name) {
   return 0;
 }
 
-void print_interface_info(const struct interface_t* interface) {
+extern void print_interface_info(const struct interface_t* interface) {
   printf("========== Interface Info ==========\n");
   printf("Index      : %d\n", interface->index);
   printf("MAC Address: %02X:%02X:%02X:%02X:%02X:%02X\n", interface->mac_addr[0],

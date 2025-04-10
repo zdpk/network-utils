@@ -4,18 +4,18 @@
 #include <stdio.h>
 #include <string.h>
 
-void print_mac(const uint8_t* mac_addr) {
+extern void print_mac(const uint8_t* mac_addr) {
   printf("%02X:%02X:%02X:%02X:%02X:%02X", mac_addr[0], mac_addr[1], mac_addr[2],
          mac_addr[3], mac_addr[4], mac_addr[5]);
 }
 
-void print_ip(const uint8_t* ip_addr) {
+extern void print_ip(const uint8_t* ip_addr) {
   struct in_addr in_addr;
   memcpy(&in_addr.s_addr, ip_addr, 4);
   printf("%s", inet_ntoa(in_addr));
 }
 
-void print_ethhdr(const struct ethhdr* eth) {
+extern void print_ethhdr(const struct ethhdr* eth) {
   printf("=== Ethernet Header ===\n");
   printf("Destination MAC: ");
   print_mac(eth->h_dest);

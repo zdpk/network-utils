@@ -2,7 +2,7 @@
 
 #include "../../include/l2/if_ether.h"
 
-void print_arp_packet(const struct arp_packet* packet) {
+extern void print_arp_packet(const struct arp_packet* packet) {
   const struct ethhdr* eth = &packet->eth;
   const struct arphdr* arp = &packet->arp;
 

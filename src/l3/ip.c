@@ -3,7 +3,7 @@
 #include <arpa/inet.h>
 #include <stdio.h>
 
-void print_iphdr(struct iphdr* ip_header) {
+extern void print_iphdr(struct iphdr* ip_header) {
   printf("IP Header:\n");
   printf("  Version: %d\n", ip_header->version);
   printf("  Header Length: %d bytes\n", ip_header->ihl * 4);

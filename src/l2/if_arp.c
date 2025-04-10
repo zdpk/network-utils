@@ -3,7 +3,7 @@
 #include "../../include/l2/arp_packet.h"
 #include "../../include/l2/if_ether.h"
 
-void print_arphdr(const struct arphdr* arp) {
+extern void print_arphdr(const struct arphdr* arp) {
   printf("=== ARP HEADER ===\n");
 
   printf("Hardware type: %d", ntohs(arp->ar_hrd));

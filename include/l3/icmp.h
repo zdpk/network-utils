@@ -13,6 +13,6 @@ struct icmphdr {
   uint16_t sequence; // Sequence number
 } __attribute__((packed));
 
-void print_icmphdr(struct icmphdr *icmp_header);
+extern void print_icmphdr(struct icmphdr *icmp_header);
 
 

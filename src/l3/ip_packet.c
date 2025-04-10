@@ -8,8 +8,7 @@
 #include "../../include/l2/if_ether.h"
 #include "../../include/l3/icmp.h"
 
-void print_ip_packet(struct ip_packet* packet) {
-  // print_ethhdr(&packet->eth);
+extern void print_ip_packet(struct ip_packet* packet) {
   print_iphdr(&packet->ip);
   print_icmphdr(&packet->icmp);
 

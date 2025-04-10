@@ -15,11 +15,11 @@
 #include "../../include/l3/ip_packet.h"
 #include "../../include/utils/checksum.h"
 
-void print_usage(const char* program_name) {
+static void print_usage(const char* program_name) {
   printf("Usage: %s <target_ip>\n", program_name);
 }
 
-int parse_args(int argc, char** argv, char* target_ip) {
+static int parse_args(int argc, char** argv, char* target_ip) {
   if (argc != 2) {
     print_usage(argv[0]);
     exit(1);
@@ -29,7 +29,7 @@ int parse_args(int argc, char** argv, char* target_ip) {
 }
 
 /* create raw socket for ICMP protocol */
-int create_socket() {
+static int create_socket() {
   int socket_fd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
   if (socket_fd < 0) {
     perror("failed to create socket");
@@ -38,7 +38,7 @@ int create_socket() {
   return socket_fd;
 }
 
-int init_sockaddr_in(struct sockaddr_in* addr, const char* ip_addr_str) {
+static int init_sockaddr_in(struct sockaddr_in* addr, const char* ip_addr_str) {
   addr->sin_family = AF_INET;
   /* 0 is wildcard port */
   addr->sin_port = 0;
@@ -47,8 +47,8 @@ int init_sockaddr_in(struct sockaddr_in* addr, const char* ip_addr_str) {
   return 0;
 }
 
-int send_icmp_echo_request(int socket_fd, struct sockaddr_in* src_addr,
-                           struct sockaddr_in* dest_addr, int sequence) {
+static int send_icmp_echo_request(int socket_fd, struct sockaddr_in* src_addr,
+                                  struct sockaddr_in* dest_addr, int sequence) {
   // Allocate memory for the entire packet structure including the flexible
   // array member
   uint8_t ip_packet_buf[sizeof(struct ip_packet) + ICMP_DATA_SIZE];
@@ -129,8 +129,8 @@ int send_icmp_echo_request(int socket_fd, struct sockaddr_in* src_addr,
   return 0;
 }
 
-int recv_icmp_echo_reply(int socket_fd, struct sockaddr_in* src_addr,
-                         struct sockaddr_in* dest_addr) {
+static int recv_icmp_echo_reply(int socket_fd, struct sockaddr_in* src_addr,
+                                struct sockaddr_in* dest_addr) {
   uint8_t recv_buf[sizeof(struct ip_packet) + ICMP_DATA_SIZE];
   socklen_t addr_len = sizeof(struct sockaddr_in);
 
@@ -206,7 +206,7 @@ typedef struct {
   struct sockaddr_in dest_addr;
 } recv_thread_data_t;
 
-void* recv_loop(void* arg) {
+static void* recv_loop(void* arg) {
   recv_thread_data_t* data = (recv_thread_data_t*)arg;
   int socket_fd = data->socket_fd;
   struct sockaddr_in* src_addr = &data->src_addr;

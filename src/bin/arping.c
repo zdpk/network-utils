@@ -18,11 +18,11 @@
 #include "../../include/l2/if_ether.h"
 #include "../../include/l2/interface.h"
 
-void print_usage(const char* program_name) {
+static void print_usage(const char* program_name) {
   printf("Usage: %s <target_ip>\n", program_name);
 }
 
-int parse_args(int argc, char** argv, char* target_ip) {
+static int parse_args(int argc, char** argv, char* target_ip) {
   if (argc != 2) {
     print_usage(argv[0]);
     exit(1);
@@ -31,7 +31,7 @@ int parse_args(int argc, char** argv, char* target_ip) {
   return 0;
 }
 
-int create_raw_socket() {
+static int create_raw_socket() {
   int socket_fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ARP));
 
   if (socket_fd < 0) {
@@ -41,8 +41,8 @@ int create_raw_socket() {
   return socket_fd;
 }
 
-int init_sockaddr_ll(struct sockaddr_ll* sockaddr_ll,
-                     const struct interface_t* interface) {
+static int init_sockaddr_ll(struct sockaddr_ll* sockaddr_ll,
+                            const struct interface_t* interface) {
   sockaddr_ll->sll_family = AF_PACKET;
   sockaddr_ll->sll_ifindex = interface->index;
   sockaddr_ll->sll_protocol = ETH_P_ARP;
@@ -54,8 +54,8 @@ int init_sockaddr_ll(struct sockaddr_ll* sockaddr_ll,
   return 0;
 }
 
-int bind_raw_socket(int socket_fd, struct sockaddr_in* source_addr,
-                    socklen_t source_addr_len) {
+static int bind_raw_socket(int socket_fd, struct sockaddr_in* source_addr,
+                           socklen_t source_addr_len) {
   if (bind(socket_fd, (struct sockaddr*)source_addr, source_addr_len) < 0) {
     perror("failed to bind raw socket to interface");
     return -1;
@@ -63,10 +63,10 @@ int bind_raw_socket(int socket_fd, struct sockaddr_in* source_addr,
   return 0;
 }
 
-int send_arp_request(int socket_fd, struct interface_t* interface,
-                     const struct in_addr* target_ip
-                     //  struct sockaddr_ll *sockaddr_ll,
-                     //  socklen_t sockaddr_ll_len
+static int send_arp_request(int socket_fd, struct interface_t* interface,
+                            const struct in_addr* target_ip
+                            //  struct sockaddr_ll *sockaddr_ll,
+                            //  socklen_t sockaddr_ll_len
 ) {
   struct sockaddr_ll sockaddr_ll = {
       0,
@@ -101,8 +101,8 @@ int send_arp_request(int socket_fd, struct interface_t* interface,
   return 0;
 }
 
-int recv_arp_reply(int socket_fd, struct interface_t* interface,
-                   const struct in_addr* source_ip) {
+static int recv_arp_reply(int socket_fd, struct interface_t* interface,
+                          const struct in_addr* source_ip) {
   struct arp_packet packet = {
       0,
   };
