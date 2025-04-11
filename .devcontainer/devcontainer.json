@@ -1,0 +1,15 @@
+{
+  "name": "Network Development Environment",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "network-utils",
+  "workspaceFolder": "/workspace",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "llvm-vs-code-extensions.vscode-clangd",
+        "xaver.clang-format",
+        "streetsidesoftware.code-spell-checker"
+      ]
+    }
+  }
+}

@@ -1,0 +1,86 @@
+version: "3"
+
+services:
+  # wireshark:
+  #   image: lscr.io/linuxserver/wireshark:latest
+  #   container_name: wireshark
+  #   cap_add:
+  #     - NET_ADMIN
+  #   security_opt:
+  #     - seccomp:unconfined # optional
+  #   network_mode: host
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=1000
+  #     - TZ=Asia/Seoul
+  #   volumes:
+  #     - ./wireshark/config:/config
+  #   ports:
+  #     - 3000:3000
+  #     - 3001:3001
+  #   restart: unless-stopped
+  network-utils:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ..:/workspace:cached
+    command: sleep infinity
+    networks:
+      subnet1_network-utils:
+        ipv4_address: 192.168.1.100
+    mac_address: 02:42:ac:11:00:ee
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
+    privileged: true
+
+  container1_network-utils:
+    container_name: container1_network-utils
+    image: ubuntu
+    command: sh -c "apt-get update && apt-get install -y arping tcpdump iputils-ping net-tools iproute2 && sleep infinity"
+    networks:
+      subnet1_network-utils:
+        ipv4_address: 192.168.1.10
+    mac_address: 02:42:ac:11:00:10
+
+  container2_network-utils:
+    container_name: container2_network-utils
+    image: ubuntu
+    command: sh -c "apt-get update && apt-get install -y arping tcpdump iputils-ping net-tools iproute2 && sleep infinity"
+    networks:
+      subnet2_network-utils:
+        ipv4_address: 192.168.2.20
+    mac_address: 02:42:ac:11:00:20
+
+  # my_container3:
+  #   container_name: my_container3
+  #   image: ubuntu
+  #   command: sh -c "apt-get update && apt-get install -y arping tcpdump iputils-ping net-tools iproute2 && sleep infinity"
+  #   networks:
+  #     my_subnet1:
+  #       ipv4_address: 192.168.1.30
+  #   mac_address: 02:42:ac:11:00:30
+
+  # my_container4:
+  #   container_name: my_container4
+  #   image: ubuntu
+  #   command: sh -c "apt-get update && apt-get install -y arping tcpdump iputils-ping net-tools iproute2 && sleep infinity"
+  #   networks:
+  #     my_subnet2:
+  #       ipv4_address: 192.168.2.40
+  #   mac_address: 02:42:ac:11:00:40
+
+networks:
+  subnet1_network-utils:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.1.0/24
+          gateway: 192.168.1.1
+  subnet2_network-utils:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.2.0/24
+          gateway: 192.168.2.1
