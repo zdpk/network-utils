@@ -35,6 +35,20 @@ static int create_socket() {
     perror("failed to create socket");
     return -1;
   }
+  int one = 1;
+  /*
+    IP_HDRINCL - ip header include (manually)
+    if `SOCK_DGRAM` is used, Kernel will automatically add IP header
+    but if `SOCK_RAW` is used, we need to manually add IP header
+    in this case, `IP_HDRINCL` option is required for adding IP header that I
+    wrote manually
+   */
+  if (setsockopt(socket_fd, IPPROTO_IP, IP_HDRINCL, &one, sizeof(one)) < 0) {
+    perror("Error setting IP_HDRINCL");
+    close(socket_fd);
+    return -1;
+  }
+
   return socket_fd;
 }
 
@@ -107,18 +121,6 @@ static int send_icmp_echo_request(int socket_fd, struct sockaddr_in* src_addr,
     because the packet size is small and fixed
     and the socket is raw socket
   */
-  int one = 1;
-  /*
-    IP_HDRINCL - ip header include (manually)
-    if `SOCK_DGRAM` is used, Kernel will automatically add IP header
-    but if `SOCK_RAW` is used, we need to manually add IP header
-    in this case, `IP_HDRINCL` option is required for adding IP header that I
-    wrote manually
-   */
-  if (setsockopt(socket_fd, IPPROTO_IP, IP_HDRINCL, &one, sizeof(one)) < 0) {
-    perror("Error setting IP_HDRINCL");
-    return -1;
-  }
   if (sendto(socket_fd, (uint8_t*)packet,
              sizeof(struct ip_packet) + ICMP_DATA_SIZE, 0,
              (struct sockaddr*)dest_addr, sizeof(struct sockaddr_in)) < 0) {
@@ -216,6 +218,7 @@ static void* recv_loop(void* arg) {
     printf("--------------recv_loop--------------\n");
     if (recv_icmp_echo_reply(socket_fd, src_addr, dest_addr) < 0) {
       perror("failed to receive ICMP Echo reply");
+      close(socket_fd);
       exit(1);
     }
   }
@@ -281,6 +284,7 @@ int main(int argc, char** argv) {
   if (pthread_create(&recv_thread, &recv_thread_attr, recv_loop, &thread_data) <
       0) {
     perror("failed to create receive thread");
+    close(socket_fd);
     exit(1);
   }
 
@@ -292,6 +296,7 @@ int main(int argc, char** argv) {
     if (send_icmp_echo_request(socket_fd, &src_addr, &dest_addr, sequence++) <
         0) {
       perror("failed to send ICMP Echo request");
+      close(socket_fd);
       exit(1);
     }
     next_time.tv_sec += 1;

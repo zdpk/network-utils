@@ -3,6 +3,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#define IP_HDR_SIZE 20
+
 #define IPVERSION 4
 
 struct iphdr {

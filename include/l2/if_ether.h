@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#define MTU 1500
+
 #define ETH_ALEN 6
 #define ETH_HLEN 14
 #define ETH_P_ARP 0x0806
